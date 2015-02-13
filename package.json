@@ -1,5 +1,5 @@
 {
-  "name": "cfx",
+  "name": "coffeex",
   "version": "1.0.0",
   "description": "Coffee DSL for React Virtual DOM instead of JSX",
   "main": "index.js",

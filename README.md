@@ -1,4 +1,4 @@
-# CFX
+# CoffeeX
 
 Coffee DSL for React Virtual DOM instead of JSX
 
