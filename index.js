@@ -4,42 +4,69 @@ var React = require('react');
 
 function NOOP () { /* NOOP */  }
 
-function cfx (fn) {
-  var isRoot = true,
-      stack = [],
-      current = [];
-  fn.call(this, function $ (tag, attr, children) {
-    if (arguments.length === 1) {
-      attr = {};
+function Context () {
+  this.stack = [];
+  this.current = [];
+}
+
+Context.prototype.createElement = function createElement (tag, attr_, children_) {
+  var elem = React.createElement(tag);
+  this.current.push(elem);
+  
+  var opts = function (attr, children) {
+    if (typeof attr !== 'object') {
+      children = attr;
+      attr = {};      
+    }
+    if (typeof children !== 'function') {
       children = NOOP;
-    } else if (arguments.length === 2) {
-      if (typeof attr === 'object') {
-        children = NOOP;
-      } else {
-        children = attr;
-        attr = {};      
-      }
     }
 
-    if (isRoot && current.length > 0) {
+    this.current.pop();
+    
+    if (this.stack.length === 0 && this.current.length > 0) {
+      console.log(this.current, tag, attr, children);
       throw new SyntaxError('root node must be only one');
     }
 
-    stack.push(current);
-    current = [];
-    isRoot = false;
+    this.stack.push(this.current);
+    this.current = [];
     if (typeof children === 'string') {
-      current.push(children);
+      this.current.push(children);
     } else {
-      children.call(this);
+      children();
     }
-    var elem = React.createElement(tag, attr, current);
-    current = stack.pop();
-    current.push(elem);
-  }, function _ (text) {
-    current.push(text);
-  });
-  return current[0];
+    var elem = React.createElement(tag, attr, this.current);
+    this.current = this.stack.pop();
+    this.current.push(elem);
+  }.bind(this);
+
+  if (arguments.length >= 2) {
+    return opts(attr_, children_);
+  } else {
+    return opts;
+  }
+};
+
+Context.prototype.createTextNode = function createTextNode (text) {
+  this.current.push(text);
+};
+
+Context.prototype.getRootNode = function getRootNode () {
+  return this.current[0];
+};
+
+function cfx (fn) {
+  var ctx = new Context(),
+      tags = Object.keys(React.DOM),
+      $ = ctx.createElement.bind(ctx);
+
+  Object.defineProperties($, tags.reduce(function (desc, tag) {
+    desc[tag] = { get: ctx.createElement.bind(ctx, tag) };
+    return desc;
+  }, {}));
+  fn($, ctx.createTextNode.bind(ctx));
+  return ctx.getRootNode();
 }
 
 module.exports = cfx;
