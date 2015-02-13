@@ -8,7 +8,7 @@ function cfx (fn) {
   var isRoot = true,
       stack = [],
       current = [];
-  fn(function $ (tag, attr, children) {
+  fn.call(this, function $ (tag, attr, children) {
     if (arguments.length === 1) {
       attr = {};
       children = NOOP;
@@ -31,7 +31,7 @@ function cfx (fn) {
     if (typeof children === 'string') {
       current.push(children);
     } else {
-      children();
+      children.call(this);
     }
     var elem = React.createElement(tag, attr, current);
     current = stack.pop();
