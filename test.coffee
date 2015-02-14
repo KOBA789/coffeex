@@ -8,7 +8,7 @@ case1 =
   actual:
     cfx ($, _) ->
       $.div ->
-        $.h1 key: 1, style: { textAlign: 'center' }, ->
+        $.h1 '.title#big-title', key: 1, style: { textAlign: 'center' }, ->
           $.span ->
             for i in [1..3]
               _ @foo
@@ -21,7 +21,7 @@ case1 =
 
   expected: (params) ->
     React.createElement('div', {}, [
-      React.createElement('h1', { key: 1, style: { textAlign: 'center' } },
+      React.createElement('h1', { id: 'big-title', className: 'title', key: 1, style: { textAlign: 'center' } },
         React.createElement('span', {}, [
           params.foo,
           React.createElement('br', { key: 1 }),

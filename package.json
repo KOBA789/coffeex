@@ -1,6 +1,6 @@
 {
   "name": "coffeex",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Coffee DSL for React Virtual DOM instead of JSX",
   "main": "index.js",
   "scripts": {
@@ -13,5 +13,8 @@
   },
   "devDependencies": {
     "coffee-script": "^1.9.0"
+  },
+  "dependencies": {
+    "parseful": "0.0.1"
   }
 }
