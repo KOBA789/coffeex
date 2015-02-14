@@ -4,7 +4,8 @@ var React = require('react');
 
 function NOOP () { /* NOOP */  }
 
-function Context () {
+function Context (params) {
+  this.params = params;
   this.stack = [];
   this.current = [];
 }
@@ -34,7 +35,7 @@ Context.prototype.createElement = function createElement (tag, attr_, children_)
     if (typeof children === 'string') {
       this.current.push(children);
     } else {
-      children();
+      children.call(this.params);
     }
     var elem;
     if (this.current.length === 0) {
@@ -65,16 +66,18 @@ Context.prototype.getRootNode = function getRootNode () {
 };
 
 function cfx (fn) {
-  var ctx = new Context(),
-      tags = Object.keys(React.DOM),
-      $ = ctx.createElement.bind(ctx);
+  return function render (params) {
+    var ctx = new Context(params),
+        tags = Object.keys(React.DOM),
+        $ = ctx.createElement.bind(ctx);
 
-  Object.defineProperties($, tags.reduce(function (desc, tag) {
-    desc[tag] = { get: ctx.createElement.bind(ctx, tag) };
-    return desc;
-  }, {}));
-  fn($, ctx.createTextNode.bind(ctx));
-  return ctx.getRootNode();
+    Object.defineProperties($, tags.reduce(function (desc, tag) {
+      desc[tag] = { get: ctx.createElement.bind(ctx, tag) };
+      return desc;
+    }, {}));
+    fn($, ctx.createTextNode.bind(ctx), params);
+    return ctx.getRootNode();
+  };
 }
 
 module.exports = cfx;

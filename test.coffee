@@ -11,38 +11,42 @@ case1 =
         $.h1 key: 1, style: { textAlign: 'center' }, ->
           $.span ->
             for i in [1..3]
-              _ 'text'
+              _ @foo
               $.br key: i
         $ 'h2', key: 2, ->
-          _ 'text1'
+          _ @bar
           $ 'br', key: 1
-          _ 'text2'
+          _ @bar
         $.h3 key: 3, 'h3 text'
 
-  expected:
+  expected: (params) ->
     React.createElement('div', {}, [
       React.createElement('h1', { key: 1, style: { textAlign: 'center' } },
         React.createElement('span', {}, [
-          'text',
+          params.foo,
           React.createElement('br', { key: 1 }),
-          'text',
+          params.foo,
           React.createElement('br', { key: 2 }),
-          'text',
+          params.foo,
           React.createElement('br', { key: 3 })
         ])
       ),
       React.createElement('h2', { key: 2 }, [
-        'text1',
+        params.bar,
         React.createElement('br', { key: 1 }),
-        'text2'
+        params.bar
       ]),
       React.createElement('h3', { key: 3 }, 'h3 text')
     ])
 
-#console.log React.renderToStaticMarkup(case1.actual)
-#console.log React.renderToStaticMarkup(case1.expected)
-#util = require 'util'
-#console.log util.inspect case1.actual, depth: null
-#console.log util.inspect case1.expected, depth: null
+params =
+  foo: 'foo'
+  bar: 'bar'
 
-assert.deepEqual(case1.actual, case1.expected)
+#console.log React.renderToStaticMarkup(case1.actual(params))
+#console.log React.renderToStaticMarkup(case1.expected(params))
+#util = require 'util'
+#console.log util.inspect case1.actual(params), depth: null
+#console.log util.inspect case1.expected(params), depth: null
+
+assert.deepEqual(case1.actual(params), case1.expected(params))
