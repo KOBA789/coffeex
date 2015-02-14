@@ -17,6 +17,7 @@ case1 =
           _ 'text1'
           $ 'br'
           _ 'text2'
+        $.h3 'h3 text'
 
   expected:
     React.createElement('div', {}, [
@@ -34,6 +35,9 @@ case1 =
         'text1',
         React.createElement('br'),
         'text2'
+      ]),
+      React.createElement('h3', {}, [
+        'h3 text'
       ])
     ])
 

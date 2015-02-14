@@ -18,7 +18,7 @@ Context.prototype.createElement = function createElement (tag, attr_, children_)
       children = attr;
       attr = {};      
     }
-    if (typeof children !== 'function') {
+    if (typeof children !== 'function' && typeof children !== 'string') {
       children = NOOP;
     }
 
