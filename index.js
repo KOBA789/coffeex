@@ -110,7 +110,7 @@ Context.prototype.createElement = function createElementWrapper () {
             selector = parseCssSelector(selectorStr);
             if (selector === null) {
               attr = {};
-              children = selector;
+              children = selectorStr;
             } else {
               attr = {};
               children = NOOP;
