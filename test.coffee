@@ -18,7 +18,9 @@ case1 =
           $ 'br', key: 1
           _ @bar
         $.h3 key: 3, 'h3 text'
-        $.h4 'h4 text'
+        $.h4 '.subtitle', ->
+          _ 'hoge'
+        $.h5 'h5 text'
 
   expected: (params) ->
     React.createElement('div', {}, [
@@ -38,7 +40,8 @@ case1 =
         params.bar
       ]),
       React.createElement('h3', { key: 3 }, 'h3 text'),
-      React.createElement('h4', {}, 'h4 text')
+      React.createElement('h4', { className: 'subtitle' }, 'hoge'),
+      React.createElement('h5', {}, 'h5 text')
     ])
 
 params =

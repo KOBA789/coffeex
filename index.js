@@ -74,7 +74,7 @@ function Context (params) {
 
 Context.prototype.createElement = function createElementWrapper () {
   var alreadyCreated = false;
-  
+
   function createElement (tag, selectorStr, attr, children) {
     var selector = null;
     switch (arguments.length) {
@@ -85,8 +85,13 @@ Context.prototype.createElement = function createElementWrapper () {
       selector = parseCssSelector(tag);
       if (selector === null) {
         if (typeof selectorStr === 'string') {
-          children = NOOP;
           selector = parseCssSelector(selectorStr);
+          if (typeof attr === 'object') {
+            children = NOOP;
+          } else {
+            children = attr;
+            attr = {};
+          }
         } else {
           children = attr;
           attr = selectorStr;
