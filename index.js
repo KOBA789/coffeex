@@ -36,7 +36,15 @@ Context.prototype.createElement = function createElement (tag, attr_, children_)
     } else {
       children();
     }
-    var elem = React.createElement(tag, attr, this.current);
+    var elem;
+    if (this.current.length === 0) {
+      elem = React.createElement(tag, attr);
+    } else {
+      if (this.current.length === 1) {
+        this.current = this.current[0];
+      }
+      elem = React.createElement(tag, attr, this.current);
+    }
     this.current = this.stack.pop();
     this.current.push(elem);
   }.bind(this);
