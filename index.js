@@ -143,7 +143,7 @@ Context.prototype.createElement = function createElementWrapper () {
       this.current.pop();
     }
     alreadyCreated = true;
-    
+
     if (this.stack.length === 0 && this.current.length > 0) {
       console.log(this.current, tag, attr, children);
       throw new SyntaxError('root node must be only one');

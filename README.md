@@ -50,10 +50,17 @@ cfx ($, _) ->
 
 ### `$: Function`
 
+Example:
+
+```
+$ 'div', '#main.container', { style: { width: '960px' } }, ->
+  # children...
+```
+
 Arguments Pattern:
 
-| tag name (String) <br> / component (ReactComponent) | id and class (CSSSelectorString) | attribute (Object) | children (Function / String) |
-|-----------------------------------------------------|----------------------------------|--------------------|------------------------------|
+| tag name (String) <br> / component (ReactComponent) | id and class <br> (CSSSelectorString) | attribute <br> (Object) | children <br> (Function / String) |
+|:---------------------------------------------------:|:--------------------------------:|:------------------:|:----------------------------:|
 | ✓                                                   | ✓                                | ✓                  | ✓                            |
 | ✓                                                   | ✓                                | ✓                  |                              |
 | ✓                                                   | ✓                                |                    | ✓                            |
