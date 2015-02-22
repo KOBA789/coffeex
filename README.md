@@ -41,3 +41,26 @@ cfx ($, _) ->
       $.br
       _ 'text2'
 ```
+
+## API
+
+### `cfx: Function`
+
+`cfx(block: Function($, _))`
+
+### `$: Function`
+
+Arguments Pattern:
+
+| tag name (String) <br> / component (ReactComponent) | id and class (CSSSelectorString) | attribute (Object) | children (Function / String) |
+|-----------------------------------------------------|----------------------------------|--------------------|------------------------------|
+| ✓                                                   | ✓                                | ✓                  | ✓                            |
+| ✓                                                   | ✓                                | ✓                  |                              |
+| ✓                                                   | ✓                                |                    | ✓                            |
+| ✓                                                   |                                  | ✓                  | ✓                            |
+|                                                     | ✓                                | ✓                  | ✓                            |
+| ✓                                                   | ✓                                |                    |                              |
+| ✓                                                   |                                  | ✓                  |                              |
+| ✓                                                   |                                  |                    | ✓                            |
+|                                                     |                                  | ✓                  | ✓                            |
+| ✓                                                   |                                  |                    |                              |
