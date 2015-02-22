@@ -52,7 +52,7 @@ cfx ($, _) ->
 
 Example:
 
-```
+```coffee
 $ 'div', '#main.container', { style: { width: '960px' } }, ->
   # children...
 ```
