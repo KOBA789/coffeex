@@ -13,8 +13,5 @@
   },
   "devDependencies": {
     "coffee-script": "^1.9.0"
-  },
-  "dependencies": {
-    "parseful": "0.0.1"
   }
 }

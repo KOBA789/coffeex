@@ -1,69 +1,49 @@
 var assert = require('assert');
 
-var React = require('react'),
-    parseful = require('parseful');
+var React = require('react');
 
 function NOOP () { /* NOOP */  }
 
-var p = parseful.define('cssSelector', function (c, $, _) {
-  var a = c.action,
-      chr = function (e) {
-        return c.satisfy(function (c) {
-          return c === e;
-        });
-      },
-      letter = c.satisfy(function (c) {
-        return /^[a-zA-Z]$/.test(c);
-      }),
-      digit = c.satisfy(function (c) {
-        return /^[0-9]$/.test(c);
-      }),
-      optional = function (p) {
-        return c.choice([p, parseful.Unit]);
-      };
-
-  return {
-    'cssIdent': a($(a(optional(chr('-')), function (r) { return r === parseful.Unit ? '' : r; }),
-                  a(c.many1(c.choice([chr('_'), letter])), function (list) { return list.join(''); }),
-                  a(c.many(c.choice([chr('_'), letter, digit, chr('-')])), function (list) { return list.join(''); })),
-                  function (list) { return list.join(''); }),
-    'class': $(chr('.'), _('cssIdent')),
-    'id': $(chr('#'), _('cssIdent')),
-    'cssSelector': a(c.choice([
-      a($(c.many(_('class')),
-          a(_('id'), function (id) { return [id]; }),
-          c.many(_('class'))),
-        function (list) {
-          return list.reduce(function (prev, curr) { return prev.concat(curr); }, []);
-        }),
-      c.many1(_('class'))
-    ]), function (list) {
-      return list.reduce(function (r, selector) {
-        switch (selector[0]) {
-        case '.':
-          if (!r.hasOwnProperty('classes')) {
-            r.classes = {};
-          }
-          r.classes[selector[1]] = true;
-          break;
-        case '#':
-          r.id = selector[1];
-          break;
-        }
-        return r;
-      }, {});
-    })
-   };
-});
+var CSS_IDENT = /^-?(?:[_a-z]|[\240-\377]|(?:(:?\\[0-9a-f]{1,6}(\r\n|[ \t\r\n\f])?)|\\[^\r\n\f0-9a-f]))(?:[_a-z0-9-]|[\240-\377]|(?:(:?\\[0-9a-f]{1,6}(\r\n|[ \t\r\n\f])?)|\\[^\r\n\f0-9a-f]))*/;
 
 function parseCssSelector (input) {
-  var s = new parseful.State(0, input.split('')),
-      r = p(s);
-  if (s.peek === parseful.Nothing) {
-    return r;
-  } else {
-    return null;
+  function parseIdent (input) {
+    var match = input.match(CSS_IDENT);
+    if (match === null) {
+      throw new SyntaxError('illegal CSS ident');
+    }
+    return match[0];
   }
+
+  var result = { classes: {} };
+
+  for (var next = input; next.length > 0; ) {
+    switch (next[0]) {
+    case '#':
+      if (result.hasOwnProperty('id')) {
+        throw new SyntaxError('id is already set: ' + result.id);
+      }
+      result.id = parseIdent(next.substring(1));
+      next = next.substring(result.id.length + 1);
+      break;
+    case '.':
+      var className = parseIdent(next.substring(1));
+      if (result.classes.hasOwnProperty(className)) {
+        throw new SyntaxError('class is duplicated: ' + className);
+      }
+      result.classes[className] = true;
+      next = next.substring(className.length + 1);
+      break;
+    default:
+      if (next.length === input.length) {
+        return null;
+      } else {
+        throw new SyntaxError('unexpected char: ' + next[0]);
+      }
+    }
+  }
+
+  return result;
 }
 
 function Context (params) {
