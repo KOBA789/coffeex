@@ -4,6 +4,11 @@ React = require 'react'
 
 cfx = require './'
 
+hogePara = React.createClass(
+  render: cfx ($, _) ->
+    $.p 'hoge'
+)
+
 case1 =
   actual:
     cfx ($, _) ->
@@ -21,6 +26,7 @@ case1 =
         $.h4 '.subtitle', ->
           _ 'hoge'
         $.h5 'h5 text'
+        $ hogePara
 
   expected: (params) ->
     React.createElement('div', {}, [
@@ -41,7 +47,8 @@ case1 =
       ]),
       React.createElement('h3', { key: 3 }, 'h3 text'),
       React.createElement('h4', { className: 'subtitle' }, 'hoge'),
-      React.createElement('h5', {}, 'h5 text')
+      React.createElement('h5', {}, 'h5 text'),
+      React.createElement(hogePara)
     ])
 
 params =

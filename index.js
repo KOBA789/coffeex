@@ -6,7 +6,13 @@ function NOOP () { /* NOOP */  }
 
 var CSS_IDENT = /^-?(?:[_a-z]|[\240-\377]|(?:(:?\\[0-9a-f]{1,6}(\r\n|[ \t\r\n\f])?)|\\[^\r\n\f0-9a-f]))(?:[_a-z0-9-]|[\240-\377]|(?:(:?\\[0-9a-f]{1,6}(\r\n|[ \t\r\n\f])?)|\\[^\r\n\f0-9a-f]))*/;
 
+var parseCssSelectorMemo = {};
+
 function parseCssSelector (input) {
+  if (parseCssSelectorMemo.hasOwnProperty(input)) {
+    return parseCssSelectorMemo[input];
+  }
+  
   function parseIdent (input) {
     var match = input.match(CSS_IDENT);
     if (match === null) {
@@ -43,81 +49,110 @@ function parseCssSelector (input) {
     }
   }
 
+  parseCssSelectorMemo[input] = result;
   return result;
 }
 
-function Context (params) {
+function Nothing () { return Nothing; }
+
+var m = {
+  tag: {
+    name: 'tag',
+    cond: function tag (val) {
+      if (typeof val === 'string' && parseCssSelector(val) === null) {
+        // tag
+        return val;
+      } else if (typeof val === 'function') {
+        // component
+        return val;
+      }
+
+      return Nothing;
+    }
+  },
+  selector: {
+    name: 'selector',
+    cond: function (val) {
+      if (typeof val !== 'string') { return Nothing; }
+
+      var parsed = parseCssSelector(val);
+      if (parsed === null) { return Nothing; }
+
+      return parsed;
+    }
+  },
+  attr: {
+    name: 'attr',
+    cond: function attr (val) {
+      return (typeof val === 'object') ? val : Nothing;
+    }
+  },
+  children: {
+    name: 'children',
+    cond: function children (val) {
+      return (typeof val === 'function' || typeof val === 'string') ? val : Nothing;
+    }
+  }
+};
+
+function createMatcher (patterns) {
+  var patternsMap = patterns.reduce(function (memo, pattern) {
+    if (!memo.hasOwnProperty(pattern.length)) {
+      memo[pattern.length] = [];
+    }
+    memo[pattern.length].push(pattern);
+
+    return memo;
+  }, {});
+
+  return function match (args) {
+    var pattens = patternsMap[args.length],
+        i = 0, k = 0, ret = {}, pattern, arg;
+
+    outer:
+    for (i = 0; i < patterns.length; ++i) {
+      ret = { selector: { classes: {} }, attr: {}, children: NOOP };
+
+      pattern = patterns[i];
+      for (k = 0; k < pattern.length; ++k) {
+        arg = pattern[k];
+        if ((ret[arg.name] = arg.cond(args[k])) === Nothing) {
+          continue outer;
+        }
+      }
+
+      return ret;
+    }
+  };
+}
+
+var match = createMatcher([
+  [m.tag, m.selector, m.attr, m.children],
+  [m.tag, m.selector, m.attr            ],
+  [m.tag, m.selector,         m.children],
+  [m.tag,             m.attr, m.children],
+  [       m.selector, m.attr, m.children],
+
+  [m.tag, m.selector                    ],
+  [m.tag,             m.attr            ],
+  [m.tag,                     m.children],
+  [                   m.attr, m.children],
+
+  [m.tag                                ]
+]);
+
+function Context (params, that) {
   this.params = params;
   this.stack = [];
   this.current = [];
+  this.that = that;
 }
 
 Context.prototype.createElement = function createElementWrapper () {
   var alreadyCreated = false;
 
-  function createElement (tag, selectorStr, attr, children) {
-    var selector = null;
-    switch (arguments.length) {
-    case 4:
-      selector = parseCssSelector(selectorStr);
-      break;
-    case 3:
-      selector = parseCssSelector(tag);
-      if (selector === null) {
-        if (typeof selectorStr === 'string') {
-          selector = parseCssSelector(selectorStr);
-          if (typeof attr === 'object') {
-            children = NOOP;
-          } else {
-            children = attr;
-            attr = {};
-          }
-        } else {
-          children = attr;
-          attr = selectorStr;
-        }
-      } else {
-        children = attr;
-        attr = selector;
-        tag = 'div';
-      }
-      break;
-    case 2:
-      if (typeof tag === 'string') {
-        if (typeof selectorStr === 'object') {
-          children = NOOP;
-          attr = selectorStr;
-        } else {
-          if (typeof selectorStr === 'function') {
-            children = selectorStr;
-            attr = {};
-          } else {
-            selector = parseCssSelector(selectorStr);
-            if (selector === null) {
-              attr = {};
-              children = selectorStr;
-            } else {
-              attr = {};
-              children = NOOP;
-            }
-          }
-        }
-      } else {
-        children = selectorStr;
-        attr = null;
-        selector = null;
-      }
-      break;
-    case 1:
-      attr = {};
-      children = NOOP;
-      break;
-    }
-
-    assert(typeof tag === 'string');
-    assert(typeof selector === 'object');
-    assert(typeof attr === 'object');
-    assert(typeof children === 'function' || typeof children === 'string');
+  function createElement () {
+    var args = match(arguments);
 
     if (alreadyCreated) {
       this.current.pop();
@@ -125,61 +160,61 @@ Context.prototype.createElement = function createElementWrapper () {
     alreadyCreated = true;
 
     if (this.stack.length === 0 && this.current.length > 0) {
-      console.log(this.current, tag, attr, children);
       throw new SyntaxError('root node must be only one');
     }
 
     var className = {};
-    if (attr.hasOwnProperty('className')) {
-      if (typeof attr.className === 'string') {
-        attr.className.split(/\s+/).forEach(function (name) {
+    if (args.attr.hasOwnProperty('className')) {
+      if (typeof args.attr.className === 'string') {
+        args.attr.className.split(/\s+/).forEach(function (name) {
           className[name] = true;
         });
       } else {
-        Object.keys(attr.className).forEach(function (name) {
-          if (attr.claasName[name]) {
+        Object.keys(args.attr.className).forEach(function (name) {
+          if (args.attr.claasName[name]) {
             className[name] = true;
           }
         });
       }
     }
     
-    if (selector !== null) {
-      if (selector.hasOwnProperty('id') && !attr.hasOwnProperty('id')) {
-        attr.id = selector.id;
-      }
-      if (selector.hasOwnProperty('classes')) {
-        Object.keys(selector.classes).forEach(function (name) {
-          if (selector.classes[name] && !className.hasOwnProperty(name)) {
-            className[name] = true;
-          }
-        });
-      }
+    // if both of attr's `id` and selector's `id` are given,
+    // use attr's `id` rather than selector's `id`
+    if (args.selector.hasOwnProperty('id') && !args.attr.hasOwnProperty('id')) {
+      args.attr.id = args.selector.id;
     }
 
+    Object.keys(args.selector.classes).forEach(function (name) {
+      // if `class` is specified in both of attr and selector,
+      // use attr's `class` rather than selectors `class`
+      if (!className.hasOwnProperty(name)) {
+        className[name] = true;
+      }
+    });
+
     if (Object.keys(className).length > 0) {
-      attr.className = Object.keys(className).join(' ');
+      args.attr.className = Object.keys(className).join(' ');
     }
     
     this.stack.push(this.current);
     this.current = [];
-    if (typeof children === 'string') {
-      this.current.push(children);
+    if (typeof args.children === 'string') {
+      this.current.push(args.children);
     } else {
-      children.call(this.params);
+      args.children.call(this.params);
     }
     var elem;
     if (this.current.length === 0) {
-      elem = React.createElement(tag, attr);
+      elem = React.createElement(args.tag, args.attr);
     } else {
       if (this.current.length === 1) {
         this.current = this.current[0];
       }
-      elem = React.createElement(tag, attr, this.current);
+      elem = React.createElement(args.tag, args.attr, this.current);
     }
     this.current = this.stack.pop();
     this.current.push(elem);
-    return tag;
+    return args.tag;
   }
 
   var tag = createElement.apply(this, arguments);
@@ -196,14 +231,16 @@ Context.prototype.getRootNode = function getRootNode () {
 
 function cfx (fn) {
   return function render (params) {
-    var ctx = new Context(params),
+    var ctx = new Context(params, this),
         tags = Object.keys(React.DOM),
         $ = ctx.createElement.bind(ctx);
 
+    /*
     Object.defineProperties($, tags.reduce(function (desc, tag) {
       desc[tag] = { get: ctx.createElement.bind(ctx, tag) };
       return desc;
     }, {}));
+     */
     fn($, ctx.createTextNode.bind(ctx), params);
     return ctx.getRootNode();
   };
