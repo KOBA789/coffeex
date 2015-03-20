@@ -235,12 +235,11 @@ function cfx (fn) {
         tags = Object.keys(React.DOM),
         $ = ctx.createElement.bind(ctx);
 
-    /*
     Object.defineProperties($, tags.reduce(function (desc, tag) {
       desc[tag] = { get: ctx.createElement.bind(ctx, tag) };
       return desc;
     }, {}));
-     */
+
     fn($, ctx.createTextNode.bind(ctx), params);
     return ctx.getRootNode();
   };
