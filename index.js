@@ -240,7 +240,7 @@ function cfx (fn) {
       return desc;
     }, {}));
 
-    fn($, ctx.createTextNode.bind(ctx), params);
+    fn.call(params, $, ctx.createTextNode.bind(ctx), params);
     return ctx.getRootNode();
   };
 }
