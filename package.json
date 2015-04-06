@@ -1,6 +1,6 @@
 {
   "name": "coffeex",
-  "version": "3.1.4",
+  "version": "4.0.0",
   "description": "Coffee DSL for React Virtual DOM instead of JSX",
   "main": "index.js",
   "scripts": {
