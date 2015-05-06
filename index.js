@@ -171,7 +171,7 @@ Context.prototype.createElement = function createElementWrapper () {
         });
       } else {
         Object.keys(args.attr.className).forEach(function (name) {
-          if (args.attr.claasName[name]) {
+          if (args.attr.className[name]) {
             className[name] = true;
           }
         });
