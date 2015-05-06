@@ -194,6 +194,8 @@ Context.prototype.createElement = function createElementWrapper () {
 
     if (Object.keys(className).length > 0) {
       args.attr.className = Object.keys(className).join(' ');
+    } else {
+      delete args.attr.className;
     }
     
     this.stack.push(this.current);
